@@ -579,4 +579,4 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Start animation
     animate();
-}); 
+}); // Adding a comment to demonstrate Git workflow
