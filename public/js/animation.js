@@ -93,15 +93,30 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Ball class
     class Ball {
-        constructor() {
-            this.baseRadius = Math.random() * 5 + 2;
+        constructor(index) {
+            this.baseRadius = 3; // Fixed size for more uniformity
             this.radius = this.baseRadius * sizeMultiplier;
-            this.x = Math.random() * (canvas.width - this.radius * 2) + this.radius;
-            this.y = Math.random() * (canvas.height - this.radius * 2) + this.radius;
-            this.vx = ((Math.random() - 0.5) * 2) * speedMultiplier;
-            this.vy = ((Math.random() - 0.5) * 2) * speedMultiplier;
-            this.color = colors[Math.floor(Math.random() * colors.length)];
-            this.opacity = Math.random() * 0.5 + 0.5;
+            
+            // Calculate position based on index for symmetrical distribution
+            const totalRows = Math.ceil(Math.sqrt(ballCount));
+            const row = Math.floor(index / totalRows);
+            const col = index % totalRows;
+            const spacing = (canvas.width - this.radius * 4) / totalRows;
+            
+            this.x = this.radius * 2 + col * spacing;
+            this.y = this.radius * 2 + row * spacing;
+            
+            // Calculate initial velocity based on position for symmetrical movement
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const angle = Math.atan2(this.y - centerY, this.x - centerX);
+            const speed = 1;
+            
+            this.vx = Math.cos(angle) * speed * speedMultiplier;
+            this.vy = Math.sin(angle) * speed * speedMultiplier;
+            
+            this.color = colors[Math.floor(index % colors.length)]; // Cycle through colors
+            this.opacity = 0.8; // More consistent opacity
             this.mass = this.radius;
             this.isExploding = false;
             this.explosionTime = 0;
@@ -359,9 +374,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // Initialize balls
+    // Initialize balls with symmetrical pattern
     for (let i = 0; i < ballCount; i++) {
-        balls.push(new Ball());
+        balls.push(new Ball(i));
     }
     
     // Optimization: Use spatial partitioning for collision detection
@@ -389,9 +404,26 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Animation loop
     function animate() {
-        // Clear canvas with slight transparency for motion blur effect
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+        // Clear canvas with black background and slight fade effect
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Draw subtle grid pattern
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+        ctx.lineWidth = 1;
+        const gridSize = 50;
+        for (let x = 0; x < canvas.width; x += gridSize) {
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, canvas.height);
+            ctx.stroke();
+        }
+        for (let y = 0; y < canvas.height; y += gridSize) {
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(canvas.width, y);
+            ctx.stroke();
+        }
         
         // Draw container
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
@@ -501,8 +533,58 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
-    // Button event listeners
-    document.getElementById('addWallBtn').addEventListener('click', () => {
+    // Button event listeners with enhanced animations
+    function setupButton(id, onClick) {
+        const button = document.getElementById(id);
+        let isActive = false;
+        
+        // Add ripple effect on click
+        button.addEventListener('click', (e) => {
+            const ripple = document.createElement('span');
+            const rect = button.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            const x = e.clientX - rect.left - size / 2;
+            const y = e.clientY - rect.top - size / 2;
+            
+            ripple.style.width = ripple.style.height = `${size}px`;
+            ripple.style.left = `${x}px`;
+            ripple.style.top = `${y}px`;
+            ripple.classList.add('ripple');
+            
+            button.appendChild(ripple);
+            
+            // Remove ripple after animation
+            setTimeout(() => ripple.remove(), 600);
+            
+            // Temporary scale down for click feedback
+            const wasActive = button.classList.contains('active');
+            button.style.transform = wasActive ? 'scale(1)' : 'scale(0.95)';
+            setTimeout(() => {
+                button.style.transform = '';
+                if (wasActive) {
+                    button.classList.add('active');
+                }
+            }, 150);
+            
+            onClick(e);
+        });
+        
+        // Add hover animation without interfering with active state
+        button.addEventListener('mouseenter', () => {
+            if (!button.classList.contains('active')) {
+                button.style.transform = 'translateY(-2px)';
+            }
+        });
+        
+        button.addEventListener('mouseleave', () => {
+            if (!button.classList.contains('active')) {
+                button.style.transform = '';
+            }
+        });
+    }
+    
+    // Setup enhanced buttons with proper state management
+    setupButton('addWallBtn', () => {
         isDrawingWall = !isDrawingWall;
         isErasingWall = false;
         updateModeDisplay();
@@ -510,7 +592,7 @@ document.addEventListener('DOMContentLoaded', () => {
         toggleButtonActive('eraseWallBtn', false);
     });
     
-    document.getElementById('eraseWallBtn').addEventListener('click', () => {
+    setupButton('eraseWallBtn', () => {
         isErasingWall = !isErasingWall;
         isDrawingWall = false;
         updateModeDisplay();
@@ -518,30 +600,74 @@ document.addEventListener('DOMContentLoaded', () => {
         toggleButtonActive('addWallBtn', false);
     });
     
-    document.getElementById('clearWallsBtn').addEventListener('click', () => {
+    setupButton('clearWallsBtn', () => {
         walls.length = 0;
+        // Add temporary pulse animation
+        const button = document.getElementById('clearWallsBtn');
+        button.classList.add('pulsing');
+        setTimeout(() => button.classList.remove('pulsing'), 2000);
     });
     
-    document.getElementById('explosionBtn').addEventListener('click', () => {
-        // Create explosion effect
+    setupButton('explosionBtn', () => {
+        const button = document.getElementById('explosionBtn');
+        button.classList.add('pulsing');
+        setTimeout(() => button.classList.remove('pulsing'), 2000);
+        
         balls.forEach(ball => {
             ball.explode();
         });
     });
     
-    document.getElementById('gravityBtn').addEventListener('click', () => {
+    setupButton('gravityBtn', () => {
         hasGravity = !hasGravity;
         updateModeDisplay();
         toggleButtonActive('gravityBtn', hasGravity);
     });
     
-    document.getElementById('freezeBtn').addEventListener('click', () => {
+    setupButton('freezeBtn', () => {
         isRunning = !isRunning;
         updateModeDisplay();
         toggleButtonActive('freezeBtn', !isRunning);
     });
     
-    // Slider event listeners
+    // Enhanced toggle button active state
+    function toggleButtonActive(id, isActive) {
+        const button = document.getElementById(id);
+        if (isActive) {
+            button.classList.add('active');
+            // Remove any inline transforms that might interfere
+            button.style.transform = '';
+        } else {
+            button.classList.remove('active');
+            button.style.transform = '';
+        }
+    }
+    
+    // Enhanced slider interaction
+    function setupSlider(id) {
+        const slider = document.getElementById(id);
+        const thumb = document.createElement('div');
+        thumb.classList.add('slider-thumb');
+        
+        slider.addEventListener('input', () => {
+            const value = slider.value;
+            const percent = ((value - slider.min) / (slider.max - slider.min)) * 100;
+            slider.style.background = `linear-gradient(to right, #007AFF ${percent}%, #ddd ${percent}%)`;
+        });
+        
+        slider.addEventListener('mousedown', () => {
+            slider.style.transform = 'scale(1.02)';
+        });
+        
+        slider.addEventListener('mouseup', () => {
+            slider.style.transform = 'scale(1)';
+        });
+    }
+    
+    // Setup enhanced sliders
+    setupSlider('speedSlider');
+    setupSlider('sizeSlider');
+    
     document.getElementById('speedSlider').addEventListener('input', (e) => {
         speedMultiplier = parseFloat(e.target.value);
     });
@@ -551,15 +677,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     // Helper functions
-    function toggleButtonActive(id, isActive) {
-        const button = document.getElementById(id);
-        if (isActive) {
-            button.classList.add('active');
-        } else {
-            button.classList.remove('active');
-        }
-    }
-    
     function updateModeDisplay() {
         let mode = 'Normal';
         if (isDrawingWall) mode = 'Drawing Walls';

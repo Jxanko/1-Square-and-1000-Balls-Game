@@ -1,21 +1,56 @@
-# Cinematic Bouncing Balls Animation Game
+# Square and 1000 Balls Game
 
-A visually stunning interactive animation of 1000 balls bouncing within a square container, with cinematic lighting, physics effects, and game-like interactive elements.
+An interactive particle simulation featuring 1000 balls with symmetrical movement patterns and dynamic wall interactions.
 
 ## Features
 
-- 1000 colorful balls with realistic physics
-- Cinematic lighting effects with dynamic shadows
-- Elastic collisions between balls
-- Optimized collision detection using spatial partitioning
-- Responsive design that adapts to window size
-- Interactive game elements:
-  - Draw custom walls for balls to bounce off
-  - Create explosive chain reactions
-  - Toggle gravity effects
-  - Control ball speed and size
-  - Freeze/unfreeze the simulation
-  - Score tracking system
+- 1000 particles with symmetrical movement
+- Interactive wall drawing and erasing
+- Gravity toggle
+- Explosion effects
+- Speed and size controls
+- Modern dark theme UI
+- Collision detection and physics
+- Real-time score tracking
+
+## Controls
+
+- **Draw Wall**: Click and drag to create walls
+- **Erase Wall**: Click to remove walls
+- **Clear All**: Remove all walls
+- **Explode**: Create an explosion effect
+- **Gravity**: Toggle gravity effect
+- **Pause**: Freeze the simulation
+- **Speed**: Adjust particle velocity
+- **Size**: Modify particle size
+
+## Technologies Used
+
+- HTML5 Canvas
+- JavaScript (ES6+)
+- CSS3 with modern features
+- Express.js for serving
+
+## Running Locally
+
+1. Clone the repository
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Start the server:
+   ```bash
+   npm run dev
+   ```
+4. Open `http://localhost:3000` in your browser
+
+## Design
+
+- Modern dark theme
+- Glass-morphism effects
+- SF Pro Display font
+- Responsive layout
+- Smooth animations and transitions
 
 ## Requirements
 
